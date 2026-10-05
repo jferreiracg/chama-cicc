@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GTI-CG — Central de Chamados</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+</head>
+<body>
+  <!-- Tela de login -->
+  <section id="auth-view" class="auth hidden">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img class="logo-img auth-logo" src="/logo.svg" alt="GTI-CG" />
+        <p>Abra e acompanhe seus chamados de suporte</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-authtab="login">Entrar</button>
+        <button class="tab" data-authtab="register">Criar conta</button>
+      </div>
+
+      <form id="login-form" class="stack">
+        <label>Nome
+          <input type="text" name="name" placeholder="Como está cadastrado" required autocomplete="off" />
+        </label>
+        <label>Senha
+          <input type="password" name="password" placeholder="••••••••" required autocomplete="off" />
+        </label>
+        <button class="btn primary block" type="submit">Entrar</button>
+        <button type="button" id="esqueci-senha" class="auth-link">Esqueceu a senha?</button>
+      </form>
+
+      <form id="register-form" class="stack hidden">
+        <label>Nome completo
+          <input type="text" name="name" placeholder="Seu nome" required minlength="2" />
+        </label>
+        <label>E-mail
+          <input type="email" name="email" placeholder="voce@empresa.com" required autocomplete="email" />
+        </label>
+        <label>Senha
+          <input type="password" name="password" placeholder="mínimo 8 caracteres" required minlength="8" autocomplete="new-password" />
+        </label>
+        <button class="btn primary block" type="submit">Criar conta</button>
+        <p class="form-note">Novas contas nascem como <strong>Usuário</strong>.<br />É o <strong>nome</strong> (não o e-mail) que você usará para entrar.<br />O Super Admin define os perfis na tela “Gerenciar usuários”.</p>
+      </form>
+
+      <!-- Recuperação de senha: pedir o link por e-mail -->
+      <form id="forgot-form" class="stack hidden">
+        <h3>Recuperar senha</h3>
+        <label>E-mail ou nome da conta
+          <input type="text" name="identifier" placeholder="voce@empresa.com ou seu nome"
+                 required autocomplete="username" maxlength="120" />
+        </label>
+        <button class="btn primary block" type="submit">Enviar link de recuperação</button>
+        <button class="btn ghost block" type="button" data-authvoltar>Voltar ao login</button>
+        <p class="form-note">
+          Enviaremos um e-mail com o link para você criar uma nova senha.<br />
+          O link é válido por <strong id="forgot-minutos">30</strong> minutos e só pode ser usado uma vez.
+        </p>
+      </form>
+
+      <!-- Redefinir a senha a partir do link recebido por e-mail -->
+      <form id="reset-form" class="stack hidden" novalidate>
+        <h3>Criar nova senha</h3>
+        <p class="form-note" id="reset-quem">Verificando o link…</p>
+        <label>Nova senha
+          <input type="password" name="password" required minlength="8" maxlength="128"
+                 placeholder="mínimo 8 caracteres" autocomplete="new-password" />
+        </label>
+        <label>Confirmar nova senha
+          <input type="password" name="confirmar" required minlength="8" maxlength="128"
+                 placeholder="repita a nova senha" autocomplete="new-password" />
+        </label>
+        <label class="mostrar-senha">
+          <input type="checkbox" name="mostrar" /> Mostrar senhas
+        </label>
+        <p class="form-error hidden" id="reset-erro" role="alert"></p>
+        <button class="btn primary block" type="submit">Alterar senha</button>
+        <button class="btn ghost block" type="button" data-authvoltar>Voltar ao login</button>
+      </form>
+
+      <div id="auth-hint" class="auth-hint hidden">
+        <strong>Perfis de demonstração</strong>
+        <span>Super Admin: Administração / admin123</span>
+        <span>Responsável Técnico: Equipe de TI / ti123456</span>
+        <span>Usuário: João da Silva / 123456</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Aplicação -->
+  <div id="app-view" class="hidden">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#/tickets"><img class="logo-img" src="/logo.svg" alt="GTI-CG — Central de Chamados" /></a>
+        <nav id="main-nav">
+          <a href="#/tickets" data-nav="tickets">Meus chamados</a>
+          <a href="#/new" data-nav="new">Abrir chamado</a>
+          <a href="#/panel" data-nav="panel" id="nav-panel" class="hidden">Painel RT</a>
+          <a href="#/users" data-nav="users" id="nav-users" class="hidden">Gerenciar usuários</a>
+          <a href="#/history" data-nav="history" id="nav-history" class="hidden">Histórico</a>
+        </nav>
+        <div class="userbox">
+          <span id="user-name"></span>
+          <span id="user-role" class="badge neutral"></span>
+          <button id="logout-btn" class="btn ghost sm">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="container"></main>
+  </div>
+
+  <!-- Diálogo: redefinir senha (nova senha + confirmação) -->
+  <div id="senha-modal" class="modal hidden">
+    <div class="modal-card card" role="dialog" aria-modal="true" aria-labelledby="senha-titulo">
+      <div class="modal-head">
+        <h3 id="senha-titulo">Redefinir senha</h3>
+        <button class="btn ghost sm" type="button" data-fechar aria-label="Fechar">✕</button>
+      </div>
+      <p class="modal-sub" id="senha-sub"></p>
+
+      <form id="senha-form" class="stack" novalidate>
+        <label>Nova senha
+          <input type="password" name="password" required minlength="8" maxlength="128"
+                 placeholder="mínimo 8 caracteres" autocomplete="new-password" />
+        </label>
+        <label>Confirmar nova senha
+          <input type="password" name="confirmar" required minlength="8" maxlength="128"
+                 placeholder="repita a nova senha" autocomplete="new-password" />
+        </label>
+        <label class="mostrar-senha">
+          <input type="checkbox" name="mostrar" /> Mostrar senhas
+        </label>
+        <p class="form-error hidden" id="senha-erro" role="alert"></p>
+        <div class="row">
+          <button class="btn ghost" type="button" data-fechar>Cancelar</button>
+          <button class="btn primary" type="submit">Redefinir senha</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
