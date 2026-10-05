@@ -1,0 +1,14 @@
+{
+  "name": "central-de-chamados",
+  "version": "1.0.0",
+  "description": "App web de abertura e acompanhamento de chamados (suporte/TI)",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemailer": "^10.0.13"
+  }
+}
